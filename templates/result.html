@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Hasil Analisis{% endblock %}
+
+{% block content %}
+<section class="result-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+
+                <div class="result-card shadow-sm">
+                    <div class="row g-0">
+                        <!-- Gambar yang diunggah -->
+                        <div class="col-md-5 result-image-wrap">
+                            <img src="{{ result.image_url }}" alt="Gambar buah yang dianalisis" class="result-image">
+                        </div>
+
+                        <!-- Detail hasil prediksi -->
+                        <div class="col-md-7">
+                            <div class="result-details">
+                                <span class="badge-label {{ 'badge-fresh' if result.label == 'fresh' else 'badge-rotten' }}">
+                                    <i class="bi {{ 'bi-leaf-fill' if result.label == 'fresh' else 'bi-emoji-frown-fill' }} me-1"></i>
+                                    {{ result.label_display }}
+                                </span>
+
+                                <h3 class="mt-3 mb-1">Tingkat Keyakinan Model</h3>
+                                <p class="text-muted small mb-2">Dianalisis pada {{ result.timestamp }}</p>
+
+                                <!-- Gauge / progress bar keyakinan -->
+                                <div class="confidence-gauge">
+                                    <div class="confidence-bar-track">
+                                        <div class="confidence-bar-fill {{ 'fill-fresh' if result.label == 'fresh' else 'fill-rotten' }}"
+                                             style="width: {{ result.confidence }}%;">
+                                        </div>
+                                    </div>
+                                    <span class="confidence-value">{{ result.confidence }}%</span>
+                                </div>
+
+                                <p class="mt-3 explanation-text">
+                                    {% if result.label == 'fresh' %}
+                                        Model Xception mendeteksi ciri-ciri buah yang masih segar, seperti warna
+                                        cerah dan tekstur permukaan yang mulus.
+                                    {% else %}
+                                        Model Xception mendeteksi indikasi pembusukan, seperti perubahan warna,
+                                        bercak gelap, atau tekstur yang keriput/lembek.
+                                    {% endif %}
+                                </p>
+
+                                <div class="d-flex gap-2 mt-4">
+                                    <a href="{{ url_for('index') }}" class="btn btn-predict flex-grow-1">
+                                        <i class="bi bi-arrow-repeat me-2"></i>Analisis Gambar Lain
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Catatan skor mentah untuk transparansi/edukasi -->
+                <p class="text-center text-muted small mt-3">
+                    Skor mentah keluaran sigmoid model: <code>{{ result.raw_score }}</code>
+                    (0 &rarr; cenderung Fresh, 1 &rarr; cenderung Rotten)
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
