@@ -1,0 +1,25 @@
+Flask==3.0.3
+Werkzeug==3.0.3
+tensorflow==2.20.0
+numpy>=1.26.4
+Pillow>=10.3.0
+matplotlib>=3.8.4
+scikit-learn>=1.4.0
+gunicorn==22.0.0
+
+# CATATAN PENTING SOAL VERSI:
+# - Sengaja TIDAK pin versi 'keras' secara manual di sini. Biarkan pip memilih
+#   versi keras yang otomatis kompatibel dengan tensorflow==2.20.0 di atas.
+# - Jika training model dilakukan di Google Colab, pastikan cell instalasi di
+#   notebook JUGA memakai tensorflow==2.20.0, supaya format model (.keras) yang
+#   dihasilkan pasti bisa dimuat kembali di sini tanpa error versi.
+#
+# Cara cek versi setelah install:
+#     python -c "import tensorflow as tf, keras; print(tf.__version__, keras.__version__)"
+#
+# CATATAN KHUSUS WINDOWS:
+# Paket 'tensorflow' di Windows sebenarnya adalah wrapper dari 'tensorflow-intel'.
+# Saat upgrade/downgrade versi, SELALU uninstall semuanya dahulu sebelum install ulang,
+# agar tidak ada versi yang nyangkut setengah-setengah:
+#     pip uninstall tensorflow tensorflow-intel keras -y
+#     pip install -r requirements.txt

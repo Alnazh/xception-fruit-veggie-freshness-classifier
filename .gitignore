@@ -1,0 +1,38 @@
+# Dataset asli (terlalu besar untuk GitHub, unduh manual dari Kaggle)
+dataset/
+data/
+
+# Folder cache tambahan yang mungkin dibuat saat eksperimen lokal
+feature_cache/
+
+# Folder reports lama di root (sudah dipindah ke static/reports/)
+reports/
+
+# Model hasil training & metrik (opsional: bisa di-track pakai Git LFS jika ingin disertakan)
+model/*.keras
+model/*.h5
+model/class_indices.json
+model/training_metrics.json
+
+# Hasil upload pengguna & laporan training
+static/uploads/*
+!static/uploads/.gitkeep
+static/reports/*
+!static/reports/.gitkeep
+
+# Dataset hasil split otomatis
+dataset_split/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# OS/editor
+.DS_Store
+.vscode/
+
+# File arsip sementara, tidak perlu ikut di-commit
+*.zip
+.ipynb_checkpoints/
