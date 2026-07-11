@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}Model &amp; Akurasi{% endblock %}
+
+{% block content %}
+<section class="model-section">
+    <div class="container">
+        <span class="eyebrow"><i class="bi bi-cpu me-1"></i>Model &amp; Akurasi</span>
+        <h1 class="section-title mb-2">Di Balik Layar FreshScan</h1>
+        <p class="text-muted mb-5" style="max-width: 42rem;">
+            Halaman ini menjelaskan arsitektur model, proses training, dan hasil evaluasinya secara
+            transparan, supaya kamu tahu persis bagaimana model ini bekerja dan seberapa bisa diandalkan.
+        </p>
+
+        <div class="info-card mb-4">
+            <h4 class="mb-3"><i class="bi bi-diagram-3 me-2"></i>Arsitektur: Transfer Learning Xception</h4>
+            <p class="text-muted">
+                Xception adalah arsitektur CNN yang sudah dilatih sebelumnya (pretrained) pada ImageNet,
+                lebih dari 14 juta gambar dengan 1.000 kategori. Alih-alih melatih model dari nol, kita
+                memakai ulang kemampuan Xception mengenali pola visual umum (tepi, tekstur, bentuk), lalu
+                menambahkan lapisan klasifikasi baru khusus untuk kelas buah dan sayur.
+            </p>
+
+            <div class="arch-flow">
+                <div class="arch-step">
+                    <div class="arch-step-title">Gambar Input</div>
+                    <div class="arch-step-sub">{{ metrics.img_size[0] if metrics else 299 }} x {{ metrics.img_size[1] if metrics else 299 }} x 3</div>
+                    <div class="arch-step-desc">Gambar diubah ukurannya dan dinormalisasi sebelum masuk ke model.</div>
+                </div>
+                <div class="arch-arrow-sep"><i class="bi bi-arrow-right"></i></div>
+
+                <div class="arch-step arch-step-highlight">
+                    <div class="arch-step-title">Xception</div>
+                    <div class="arch-step-sub">Pretrained ImageNet</div>
+                    <div class="arch-step-desc">
+                        Bagian ini bertindak sebagai mata model, sudah belajar mengenali pola visual umum.
+                        Awalnya dibekukan, lalu sebagian layer terakhir dibuka kembali (fine tuning) supaya lebih
+                        mengenali ciri khusus buah dan sayur.
+                    </div>
+                </div>
+                <div class="arch-arrow-sep"><i class="bi bi-arrow-right"></i></div>
+
+                <div class="arch-step">
+                    <div class="arch-step-title">Global Average Pooling</div>
+                    <div class="arch-step-sub">Meringkas fitur</div>
+                    <div class="arch-step-desc">
+                        Meringkas peta fitur berukuran besar dari Xception menjadi satu angka rata-rata per
+                        channel. Cara ini mengurangi jumlah parameter drastis dan mencegah overfitting,
+                        dibanding meratakan semua nilai secara langsung.
+                    </div>
+                </div>
+                <div class="arch-arrow-sep"><i class="bi bi-arrow-right"></i></div>
+
+                <div class="arch-step">
+                    <div class="arch-step-title">Dense 256</div>
+                    <div class="arch-step-sub">ReLU, Dropout 0.5</div>
+                    <div class="arch-step-desc">
+                        Layer fully connected berisi 256 neuron yang mempelajari kombinasi fitur untuk
+                        membedakan kelas. Dropout 0.5 mematikan separuh neuron secara acak saat training
+                        supaya model tidak terlalu hafal data training.
+                    </div>
+                </div>
+                <div class="arch-arrow-sep"><i class="bi bi-arrow-right"></i></div>
+
+                <div class="arch-step">
+                    <div class="arch-step-title">Dense 64</div>
+                    <div class="arch-step-sub">ReLU</div>
+                    <div class="arch-step-desc">Layer fully connected lebih kecil yang menyaring fitur sebelum ke output akhir.</div>
+                </div>
+            </div>
+
+            <div class="output-classes-box">
+                <i class="bi bi-arrow-right-circle me-1"></i>
+                <strong>Dense({{ metrics.num_classes if metrics else 6 }}, softmax)</strong>, layer output yang
+                mengubah semua fitur di atas menjadi probabilitas untuk setiap kelas (totalnya selalu 100 persen).
+                Kelas dengan probabilitas tertinggi menjadi hasil klasifikasi akhir. Kelas yang dikenali:
+                {% if class_names %}{{ class_names | join(', ') }}{% else %}belum ada, jalankan train_model.py terlebih dahulu{% endif %}
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="info-card h-100">
+                    <h5><i class="bi bi-1-circle me-2"></i>Tahap 1: Feature Extraction</h5>
+                    <p class="text-muted mb-0">
+                        Seluruh layer Xception dibekukan, bobot pretrained tidak berubah. Hanya classifier
+                        head baru (Dense 256, Dense 64, Dense output) yang dilatih, memakai fitur visual
+                        umum yang sudah dipelajari Xception dari ImageNet.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="info-card h-100">
+                    <h5><i class="bi bi-2-circle me-2"></i>Tahap 2: Fine Tuning</h5>
+                    <p class="text-muted mb-0">
+                        Sebagian layer terakhir Xception dibuka kembali dan dilatih ulang dengan learning
+                        rate lebih kecil, supaya model lebih spesifik mengenali karakteristik visual buah
+                        dan sayur segar maupun busuk.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        {% if metrics %}
+        <div class="info-card mb-4">
+            <h4 class="mb-3"><i class="bi bi-graph-up me-2"></i>Grafik Proses Training</h4>
+            <p class="text-muted small">Akurasi dan loss pada setiap epoch, dibandingkan antara data training dan validasi.</p>
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <h6 class="chart-subtitle">Tahap 1, Feature Extraction, Akurasi</h6>
+                    <div class="chart-container">
+                        <canvas id="stage1AccuracyChart"></canvas>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">
+                        Akurasi training naik dari {{ (metrics.history_stage1.accuracy[0] * 100) | round(1) }}%
+                        menjadi {{ (metrics.history_stage1.accuracy[-1] * 100) | round(1) }}% di epoch terakhir
+                        tahap ini. Akurasi validasi bergerak dari {{ (metrics.history_stage1.val_accuracy[0] * 100) | round(1) }}%
+                        menjadi {{ (metrics.history_stage1.val_accuracy[-1] * 100) | round(1) }}%.
+                        {% set gap1 = (metrics.history_stage1.accuracy[-1] - metrics.history_stage1.val_accuracy[-1]) * 100 %}
+                        {% if gap1 > 10 %}Selisih akurasi train dan validasi cukup lebar ({{ gap1 | round(1) }} persen poin), tanda model mulai menghafal data training.{% else %}Selisih akurasi train dan validasi kecil ({{ gap1 | round(1) }} persen poin), tanda model belajar dengan wajar tanpa overfitting berlebihan.{% endif %}
+                    </p>
+                </div>
+                <div class="col-lg-6">
+                    <h6 class="chart-subtitle">Tahap 1, Feature Extraction, Loss</h6>
+                    <div class="chart-container">
+                        <canvas id="stage1LossChart"></canvas>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">
+                        Loss training turun dari {{ metrics.history_stage1.loss[0] | round(3) }} menjadi
+                        {{ metrics.history_stage1.loss[-1] | round(3) }}, loss validasi dari
+                        {{ metrics.history_stage1.val_loss[0] | round(3) }} menjadi
+                        {{ metrics.history_stage1.val_loss[-1] | round(3) }}. Semakin kecil nilai loss,
+                        semakin kecil kesalahan prediksi model pada data tersebut.
+                    </p>
+                </div>
+                <div class="col-lg-6">
+                    <h6 class="chart-subtitle">Tahap 2, Fine Tuning, Akurasi</h6>
+                    <div class="chart-container">
+                        <canvas id="stage2AccuracyChart"></canvas>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">
+                        Setelah fine tuning, akurasi training mencapai
+                        {{ (metrics.history_stage2.accuracy[-1] * 100) | round(1) }}% dan akurasi validasi
+                        {{ (metrics.history_stage2.val_accuracy[-1] * 100) | round(1) }}%, meningkat dari
+                        capaian tahap 1 karena model kini juga menyesuaikan sebagian bobot Xception sendiri.
+                    </p>
+                </div>
+                <div class="col-lg-6">
+                    <h6 class="chart-subtitle">Tahap 2, Fine Tuning, Loss</h6>
+                    <div class="chart-container">
+                        <canvas id="stage2LossChart"></canvas>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">
+                        Loss akhir tahap ini adalah {{ metrics.history_stage2.loss[-1] | round(3) }} untuk
+                        training dan {{ metrics.history_stage2.val_loss[-1] | round(3) }} untuk validasi,
+                        dipakai ReduceLROnPlateau untuk menurunkan learning rate otomatis saat loss validasi berhenti membaik.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-3 col-6">
+                <div class="stat-card stat-card-compact">
+                    <div class="stat-value">{{ (metrics.test_accuracy * 100) | round(2) }}%</div>
+                    <div class="stat-label">Akurasi Test</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card stat-card-compact">
+                    <div class="stat-value">{{ metrics.test_loss | round(4) }}</div>
+                    <div class="stat-label">Loss Test</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card stat-card-compact">
+                    <div class="stat-value">{{ metrics.num_classes }}</div>
+                    <div class="stat-label">Jumlah Kelas</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card stat-card-compact">
+                    <div class="stat-value">{{ metrics.trained_at.split(" ")[0] }}</div>
+                    <div class="stat-label">Terakhir Dilatih</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-card mb-4">
+            <h4 class="mb-2"><i class="bi bi-grid-3x3 me-2"></i>Confusion Matrix</h4>
+            <p class="text-muted small">Baris adalah label sebenarnya, kolom adalah prediksi model. Warna makin gelap artinya jumlah makin banyak.</p>
+            {% if confusion_image_exists %}
+            <div class="confusion-image-wrap">
+                <img src="{{ url_for('static', filename='reports/confusion_matrix.png') }}" alt="Confusion matrix hasil evaluasi model" class="confusion-image">
+            </div>
+            {% else %}
+            <div class="insight-box insight-warning mb-3">
+                Gambar confusion matrix belum ditemukan di <code>static/reports/confusion_matrix.png</code>.
+                Kalau kamu sudah training sebelumnya, salin file <code>confusion_matrix.png</code> dari folder
+                <code>reports/</code> hasil training lama ke <code>static/reports/</code>. Angka di bawah ini
+                tetap akurat karena diambil langsung dari data training, hanya gambarnya saja yang belum ada.
+            </div>
+            {% endif %}
+
+            {% if top_confusions %}
+            <h6 class="mt-3 mb-2">Kesalahan Paling Sering Terjadi</h6>
+            <ul class="confusion-list ps-3 mb-0">
+                {% for item in top_confusions %}
+                <li>
+                    Sebanyak <strong>{{ item.count }}</strong> gambar berlabel asli
+                    <strong>{{ item.true_class }}</strong> justru diprediksi sebagai
+                    <strong>{{ item.predicted_class }}</strong>.
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted small mb-0">Tidak ada kesalahan klasifikasi berarti pada data uji, semua prediksi tepat sesuai label aslinya.</p>
+            {% endif %}
+        </div>
+
+        <div class="info-card mb-4">
+            <h4 class="mb-3"><i class="bi bi-clipboard-data me-2"></i>Classification Report</h4>
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>Kelas</th>
+                            <th class="text-center">Precision</th>
+                            <th class="text-center">Recall</th>
+                            <th class="text-center">F1-Score</th>
+                            <th class="text-center">Support</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for name in metrics.class_names %}
+                        {% set row = metrics.classification_report[name] %}
+                        <tr>
+                            <td>{{ name }}</td>
+                            <td class="text-center">{{ (row.precision * 100) | round(1) }}%</td>
+                            <td class="text-center">{{ (row.recall * 100) | round(1) }}%</td>
+                            <td class="text-center">{{ (row["f1-score"] * 100) | round(1) }}%</td>
+                            <td class="text-center">{{ row.support | int }}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr class="table-summary-row">
+                            <td><strong>Rata-rata (macro avg)</strong></td>
+                            <td class="text-center">{{ (metrics.classification_report["macro avg"].precision * 100) | round(1) }}%</td>
+                            <td class="text-center">{{ (metrics.classification_report["macro avg"].recall * 100) | round(1) }}%</td>
+                            <td class="text-center">{{ (metrics.classification_report["macro avg"]["f1-score"] * 100) | round(1) }}%</td>
+                            <td class="text-center">{{ metrics.classification_report["macro avg"].support | int }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="glossary-grid">
+                <div class="glossary-item">
+                    <div class="glossary-term">Precision</div>
+                    <div class="glossary-desc">Dari semua prediksi model untuk kelas ini, berapa persen yang benar.</div>
+                </div>
+                <div class="glossary-item">
+                    <div class="glossary-term">Recall</div>
+                    <div class="glossary-desc">Dari semua data asli kelas ini, berapa persen yang berhasil dikenali model.</div>
+                </div>
+                <div class="glossary-item">
+                    <div class="glossary-term">F1-Score</div>
+                    <div class="glossary-desc">Rata-rata harmonis precision dan recall, angka ringkas performa kelas tersebut.</div>
+                </div>
+                <div class="glossary-item">
+                    <div class="glossary-term">Support</div>
+                    <div class="glossary-desc">Jumlah data uji asli untuk kelas tersebut.</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="trainingMetricsData" class="d-none">{{ metrics | tojson }}</div>
+
+        {% else %}
+        <div class="info-card text-center py-5">
+            <i class="bi bi-bar-chart" style="font-size: 2.5rem; color: var(--text-muted);"></i>
+            <h5 class="mt-3">Belum ada data training</h5>
+            <p class="text-muted mb-0">
+                Jalankan train_model.py terlebih dahulu untuk menghasilkan grafik akurasi, confusion matrix,
+                dan classification report di halaman ini.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if metrics %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var dataEl = document.getElementById("trainingMetricsData");
+    if (dataEl && window.renderTrainingCharts) {
+        var metricsData = JSON.parse(dataEl.textContent);
+        window.renderTrainingCharts(metricsData);
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

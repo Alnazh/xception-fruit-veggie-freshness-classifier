@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Klasifikasi Kesegaran Buah &amp; Sayur{% endblock %}
+
+{% block content %}
+<section class="predict-section">
+    <div class="container">
+
+        <div class="{{ 'row g-5' if result else 'predict-upload-only' }}">
+            <div class="{{ 'col-lg-5' if result else '' }}">
+                <span class="eyebrow"><i class="bi bi-camera me-1"></i>Klasifikasi</span>
+                <h1 class="section-title mb-2">Unggah Foto Buah atau Sayur</h1>
+                <p class="text-muted mb-4">
+                    Gunakan foto close-up dengan pencahayaan cukup untuk hasil klasifikasi yang paling akurat.
+                </p>
+
+                <div class="model-status {{ 'is-ready' if model_ready else 'is-not-ready' }} mb-4">
+                    <i class="bi {{ 'bi-check-circle-fill' if model_ready else 'bi-exclamation-triangle-fill' }}"></i>
+                    <span>{{ status }}</span>
+                </div>
+
+                <div class="upload-card">
+                    <form action="{{ url_for('predict') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+                        <label for="fruitImageInput" class="dropzone" id="dropzone">
+                            <img id="previewImage" src="" alt="Preview" class="preview-image d-none">
+                            <div id="dropzonePlaceholder" class="dropzone-placeholder">
+                                <i class="bi bi-cloud-arrow-up dropzone-icon"></i>
+                                <p class="mb-1 fw-semibold">Seret dan letakkan gambar di sini</p>
+                                <p class="text-muted small mb-0">atau klik untuk memilih file (JPG, PNG, WEBP, maks 8MB)</p>
+                            </div>
+                        </label>
+                        <input class="d-none" type="file" name="fruit_image" id="fruitImageInput" accept=".jpg,.jpeg,.png,.webp" required>
+
+                        <div id="fileNameLabel" class="file-name-label d-none">
+                            <i class="bi bi-image me-1"></i><span id="fileNameText"></span>
+                            <button type="button" class="btn-clear-file" id="clearFileBtn" aria-label="Hapus file">&times;</button>
+                        </div>
+
+                        <button type="submit" class="btn btn-predict w-100 mt-3" id="submitBtn" {{ 'disabled' if not model_ready else '' }}>
+                            <i class="bi bi-search me-2"></i>Analisis Sekarang
+                        </button>
+                    </form>
+                </div>
+
+                <div class="tips-card mt-3">
+                    <h6><i class="bi bi-lightbulb me-1"></i>Tips agar hasil lebih akurat</h6>
+                    <ul class="small text-muted mb-0 ps-3">
+                        <li>Foto satu item dalam satu gambar, hindari banyak objek</li>
+                        <li>Pastikan pencahayaan cukup terang dan tidak buram</li>
+                        <li>Ambil dari jarak dekat agar detail permukaan terlihat</li>
+                    </ul>
+                </div>
+            </div>
+
+            {% if result %}
+            <div class="col-lg-7">
+                <div class="result-card">
+                    <div class="row g-0">
+                        <div class="col-md-5 result-image-wrap">
+                            <img src="{{ result.image_url }}" alt="Gambar yang dianalisis" class="result-image">
+                        </div>
+                        <div class="col-md-7">
+                            <div class="result-details">
+                                <span class="badge-label {{ 'badge-fresh' if result.condition == 'fresh' else 'badge-rotten' }}">
+                                    <i class="bi {{ 'bi-leaf-fill' if result.condition == 'fresh' else 'bi-emoji-frown-fill' }} me-1"></i>
+                                    {{ result.fruit_display }} {{ result.condition_display }}
+                                </span>
+
+                                <h3 class="mt-3 mb-1">{{ result.confidence }}% Keyakinan</h3>
+                                <p class="text-muted small mb-3">Dianalisis pada {{ result.timestamp }}</p>
+
+                                <div class="confidence-gauge">
+                                    <div class="confidence-bar-track">
+                                        <div class="confidence-bar-fill {{ 'fill-fresh' if result.condition == 'fresh' else 'fill-rotten' }}" style="width: {{ result.confidence }}%;"></div>
+                                    </div>
+                                    <span class="confidence-value">{{ result.confidence }}%</span>
+                                </div>
+
+                                <p class="explanation-text mt-3 mb-0">
+                                    {% if result.condition == 'fresh' %}
+                                    Model mendeteksi ciri khas {{ result.fruit_display|lower }} yang masih segar, warna cerah dan tekstur permukaan yang mulus.
+                                    {% else %}
+                                    Model mendeteksi indikasi pembusukan pada {{ result.fruit_display|lower }}, seperti perubahan warna, bercak gelap, atau tekstur keriput.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card mt-3">
+                    <h6 class="mb-2"><i class="bi bi-graph-up-arrow me-1"></i>Seberapa Yakin Model Ini</h6>
+                    {% if result.runner_up_gap is not none %}
+                        {% if result.runner_up_gap >= 30 %}
+                        <div class="insight-box">
+                            Model sangat yakin dengan hasil ini. Selisih probabilitas dengan kemungkinan kedua
+                            ({{ result.runner_up_display }}) mencapai {{ result.runner_up_gap }} persen poin,
+                            artinya ciri visual gambar ini cukup jelas menunjukkan satu kelas tertentu.
+                        </div>
+                        {% elif result.runner_up_gap >= 10 %}
+                        <div class="insight-box">
+                            Model cukup yakin dengan hasil ini. Kemungkinan kedua ({{ result.runner_up_display }})
+                            masih {{ result.runner_up_gap }} persen poin di bawahnya, jadi hasil ini kemungkinan besar tepat.
+                        </div>
+                        {% else %}
+                        <div class="insight-box insight-warning">
+                            Model agak ragu. Kemungkinan kedua ({{ result.runner_up_display }}) hanya berselisih
+                            {{ result.runner_up_gap }} persen poin. Coba unggah ulang dengan pencahayaan lebih
+                            terang atau sudut yang berbeda untuk hasil yang lebih pasti.
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                <div class="chart-card mt-3">
+                    <h6 class="mb-3"><i class="bi bi-bar-chart-line me-1"></i>Probabilitas Semua Kelas</h6>
+                    <div class="chart-container chart-container-sm">
+                        <canvas id="probabilityChart"></canvas>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">
+                        Grafik ini menampilkan tingkat keyakinan model terhadap setiap kelas yang dikenali.
+                        Semakin panjang bar, semakin besar kemungkinan gambar tersebut cocok dengan kelas itu.
+                    </p>
+                </div>
+
+                <div id="probabilityData" class="d-none">{{ result.all_probabilities | tojson }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var dataEl = document.getElementById("probabilityData");
+    if (dataEl && window.renderProbabilityChart) {
+        var probData = JSON.parse(dataEl.textContent);
+        window.renderProbabilityChart("probabilityChart", probData);
+    }
+});
+</script>
+{% endblock %}

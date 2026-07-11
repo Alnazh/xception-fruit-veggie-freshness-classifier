@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Tentang{% endblock %}
+
+{% block content %}
+<section class="about-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+
+                <span class="eyebrow"><i class="bi bi-info-circle me-1"></i>Tentang Proyek</span>
+                <h1 class="section-title mb-4">Latar Belakang &amp; Metodologi</h1>
+
+                <div class="info-card mb-4">
+                    <h4><i class="bi bi-question-circle me-2"></i>Latar Belakang Masalah</h4>
+                    <p class="text-muted mb-0">
+                        Penyortiran kesegaran buah secara manual di rantai pasok pangan, mulai dari
+                        petani, distributor, hingga pengecer, masih rawan human error dan tidak
+                        konsisten antar penilai. Kesalahan sortir bisa menyebabkan buah busuk lolos ke
+                        konsumen, atau sebaliknya, buah yang masih layak justru dibuang (food waste).
+                        FreshScan mencoba menunjukkan bagaimana computer vision bisa membantu mengotomasi
+                        sebagian proses ini.
+                    </p>
+                </div>
+
+                <div class="info-card mb-4">
+                    <h4><i class="bi bi-diagram-2 me-2"></i>Alur Metodologi</h4>
+                    <p class="text-muted small mb-4">
+                        Berikut tahapan nyata yang dilalui dari data mentah sampai aplikasi ini bisa dipakai:
+                    </p>
+                    <ol class="process-list">
+                        <li>
+                            <strong>Pengumpulan Dataset</strong>, mengunduh dataset publik gambar buah dan
+                            sayur segar maupun busuk dari Kaggle.
+                        </li>
+                        <li>
+                            <strong>Preprocessing</strong>, setiap gambar di-resize ke 299&times;299 piksel
+                            dan dinormalisasi menggunakan fungsi <code>preprocess_input</code> khusus
+                            Xception, ditambah augmentasi data (rotasi, zoom, flip) agar model lebih tahan
+                            terhadap variasi gambar dunia nyata.
+                        </li>
+                        <li>
+                            <strong>Transfer Learning</strong>, memanfaatkan Xception yang sudah dilatih
+                            pada ImageNet, lalu melatih ulang classifier head dalam 2 tahap: feature
+                            extraction (base dibekukan) dan fine tuning (sebagian layer terakhir dibuka).
+                        </li>
+                        <li>
+                            <strong>Evaluasi</strong>, mengukur performa model pada data uji yang belum
+                            pernah dilihat model, memakai metrik akurasi, precision, recall, F1-score, dan
+                            confusion matrix (lihat halaman <a href="{{ url_for('model_info') }}">Model &amp; Akurasi</a>).
+                        </li>
+                        <li>
+                            <strong>Penyajian ke Pengguna</strong>, model yang sudah terlatih disematkan ke
+                            aplikasi web Flask ini, sehingga siapa pun bisa mengunggah foto buah dan
+                            langsung melihat hasil klasifikasinya.
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="info-card h-100">
+                            <h5><i class="bi bi-exclamation-triangle me-2"></i>Batasan Model</h5>
+                            <ul class="text-muted small mb-0 ps-3">
+                                <li>Hanya mengenali jenis buah/sayur yang ada di dataset training (lihat halaman <a href="{{ url_for('dataset_info') }}">Dataset</a>).</li>
+                                <li>Akurasi bergantung pada kualitas foto (pencahayaan, fokus, sudut).</li>
+                                <li>Belum diuji pada buah dengan kondisi campuran (sebagian segar, sebagian busuk).</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-card h-100">
+                            <h5><i class="bi bi-signpost me-2"></i>Potensi Pengembangan</h5>
+                            <ul class="text-muted small mb-0 ps-3">
+                                <li>Menambah jenis buah/sayur lain di luar kategori dataset saat ini.</li>
+                                <li>Deteksi objek (bounding box) untuk banyak buah dalam satu foto.</li>
+                                <li>Estimasi perkiraan sisa waktu sebelum buah membusuk.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h4><i class="bi bi-mortarboard me-2"></i>Konteks Akademik</h4>
+                    <p class="text-muted mb-0">
+                        Proyek ini dibuat untuk memenuhi Tugas 12 mata kuliah Artificial Intelligence:
+                        <em>"Penerapan Transfer Learning Xception pada Aplikasi Berbasis Web Menggunakan
+                        Flask"</em>. Dibangun dengan Flask, TensorFlow/Keras, Bootstrap 5, dan Chart.js.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <span class="eyebrow"><i class="bi bi-stars me-1"></i>Transfer Learning Xception</span>
+                <h1 class="hero-title">Satu foto, tahu buahnya segar atau busuk.</h1>
+                <p class="hero-subtitle">
+                    FreshScan memakai model Xception yang dilatih ulang untuk mengenali jenis buah dan sayur
+                    sekaligus tingkat kesegarannya hanya dari satu gambar.
+                </p>
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <a href="{{ url_for('predict_page') }}" class="btn btn-predict">
+                        <i class="bi bi-camera me-2"></i>Mulai Klasifikasi
+                    </a>
+                    <a href="{{ url_for('model_info') }}" class="btn btn-outline-detail">
+                        <i class="bi bi-bar-chart me-2"></i>Lihat Performa Model
+                    </a>
+                </div>
+
+                <div class="model-status {{ 'is-ready' if model_ready else 'is-not-ready' }}">
+                    <i class="bi {{ 'bi-check-circle-fill' if model_ready else 'bi-exclamation-triangle-fill' }}"></i>
+                    <span>{{ status }}</span>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon-circle"><i class="bi bi-collection"></i></div>
+                        <div class="stat-value">{% if metrics %}{{ "{:,}".format(total_train_images + total_test_images).replace(",", ".") }}{% else %}0{% endif %}</div>
+                        <div class="stat-label">Total Gambar Dataset</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon-circle"><i class="bi bi-tags"></i></div>
+                        <div class="stat-value">{{ num_classes }}</div>
+                        <div class="stat-label">Kelas Terdeteksi</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon-circle"><i class="bi bi-bullseye"></i></div>
+                        <div class="stat-value">{% if metrics %}{{ (metrics.test_accuracy * 100) | round(1) }}%{% else %}0%{% endif %}</div>
+                        <div class="stat-label">Akurasi Data Uji</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon-circle"><i class="bi bi-diagram-3"></i></div>
+                        <div class="stat-value stat-value-sm">Xception</div>
+                        <div class="stat-label">Arsitektur Dasar</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="why-section">
+    <div class="container">
+        <div class="row g-4 align-items-center">
+            <div class="col-lg-6">
+                <span class="eyebrow">Kenapa ini penting</span>
+                <h2 class="section-title">Memilah kesegaran secara manual itu tidak konsisten</h2>
+                <p class="text-muted">
+                    Penyortiran buah dan sayur di rantai pasok pangan masih sering dilakukan manual, lambat,
+                    dan rawan penilaian yang berbeda antar orang. Model computer vision seperti ini bisa
+                    dipakai sebagai alat bantu sortir otomatis di lini produksi maupun aplikasi konsumen.
+                </p>
+                <ul class="check-list">
+                    <li><i class="bi bi-check-circle-fill"></i>Penilaian konsisten, tidak dipengaruhi kelelahan</li>
+                    <li><i class="bi bi-check-circle-fill"></i>Bisa diintegrasikan ke sistem sortir otomatis</li>
+                    <li><i class="bi bi-check-circle-fill"></i>Mengurangi food waste akibat kesalahan sortir manual</li>
+                </ul>
+            </div>
+            <div class="col-lg-6">
+                {% if class_badges %}
+                <div class="dynamic-badge-cloud">
+                    {% for badge in class_badges %}
+                    <span class="badge-label {{ 'badge-fresh' if badge.condition == 'fresh' else 'badge-rotten' }}">{{ badge.display }}</span>
+                    {% endfor %}
+                </div>
+                <p class="text-muted small mt-3 mb-0">
+                    Model ini mengenali {{ unique_items | length }} jenis buah dan sayur, masing-masing dalam
+                    kondisi segar maupun busuk ({{ class_badges | length }} kelas total).
+                </p>
+                {% else %}
+                <div class="dynamic-badge-cloud">
+                    <span class="badge-label badge-fresh">Segar</span>
+                    <span class="badge-label badge-rotten">Busuk</span>
+                </div>
+                <p class="text-muted small mt-3 mb-0">
+                    Jalankan train_model.py untuk melihat daftar kelas yang dikenali model di sini.
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="how-it-works">
+    <div class="container">
+        <h2 class="section-title text-center mb-2">Bagaimana cara kerjanya</h2>
+        <p class="text-center text-muted mb-5">Empat tahap dari gambar mentah sampai hasil klasifikasi</p>
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <i class="bi bi-upload step-icon"></i>
+                    <h5>Unggah Gambar</h5>
+                    <p class="text-muted mb-0 small">Pilih atau seret foto buah/sayur yang ingin diperiksa.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <i class="bi bi-aspect-ratio step-icon"></i>
+                    <h5>Preprocessing</h5>
+                    <p class="text-muted mb-0 small">Gambar di-resize dan dinormalisasi khusus untuk Xception.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <i class="bi bi-cpu step-icon"></i>
+                    <h5>Inferensi Model</h5>
+                    <p class="text-muted mb-0 small">Xception hasil transfer learning menghitung probabilitas tiap kelas.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <i class="bi bi-clipboard2-check step-icon"></i>
+                    <h5>Hasil Lengkap</h5>
+                    <p class="text-muted mb-0 small">Jenis item, kondisi, dan tingkat keyakinan ditampilkan lengkap.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="container text-center">
+        <h2 class="section-title mb-3">Coba sekarang dengan foto buah atau sayurmu sendiri</h2>
+        <p class="text-muted mb-4">Tidak perlu instalasi apapun, langsung dari browser.</p>
+        <a href="{{ url_for('predict_page') }}" class="btn btn-predict btn-lg">
+            <i class="bi bi-camera me-2"></i>Mulai Klasifikasi Sekarang
+        </a>
+    </div>
+</section>
+{% endblock %}
