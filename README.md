@@ -129,7 +129,7 @@ freshscan-app/
 
 ```bash
 # Clone Repository
-git clone https://github.com/Alnazh/xception-fruit-veggie-freshness-classifier
+git clone https://github.com/Alnazh/xception-fruit-veggie-freshness-classifier.git
 cd xception-fruit-veggie-freshness-classifier 
 
 # Buat virtual environment
