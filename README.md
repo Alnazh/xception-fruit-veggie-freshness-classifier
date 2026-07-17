@@ -1,246 +1,200 @@
-# FreshScan, Klasifikasi Kesegaran Buah & Sayur dengan Transfer Learning Xception
+<div align="center">
 
-Aplikasi web berbasis **Flask** yang menerapkan **Transfer Learning** dengan arsitektur
-**Xception** untuk mengklasifikasikan gambar buah & sayur ke dalam **beberapa kelas
-sekaligus**: jenis item (apel, pisang, wortel, dst, mengikuti dataset yang dipakai)
-**dan** kondisinya (segar/busuk). Jumlah & nama kelas **otomatis mengikuti struktur
-folder dataset** yang kamu pakai untuk training, tidak di-hardcode di kode.
+# FreshScan
 
-Dibuat untuk **Tugas 12** mata kuliah Artificial Intelligence:
-*"Penerapan Transfer Learning Xception untuk Klasifikasi Kesegaran Buah (Fresh vs
-Rotten) Berbasis Web Menggunakan Flask"*.
+### Klasifikasi Kesegaran Buah dan Sayur Berbasis Transfer Learning Xception
 
----
+![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-3.0-black?logo=flask&logoColor=white)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-Keras-orange?logo=tensorflow&logoColor=white)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple?logo=bootstrap&logoColor=white)
+![ChartJS](https://img.shields.io/badge/Chart.js-visualisasi-F5788D?logo=chartdotjs&logoColor=white)
 
-## 1. Halaman Aplikasi
+Unggah foto buah atau sayur, sistem akan mengenali jenisnya sekaligus menilai kondisinya, segar atau busuk, ditenagai Xception hasil transfer learning.
 
-| Route       | Isi                                                                 |
-|-------------|----------------------------------------------------------------------|
-| `/`         | Dashboard: statistik ringkas, cara kerja, kenapa deteksi ini penting  |
-| `/predict`  | Form unggah gambar + hasil klasifikasi lengkap dengan grafik probabilitas |
-| `/model`    | Arsitektur model, diagram, grafik training, confusion matrix, classification report |
-| `/dataset`  | Informasi & komposisi dataset (grafik + tabel jumlah gambar per kelas) |
-| `/about`    | Latar belakang masalah, metodologi, batasan, potensi pengembangan     |
+[Fitur](#fitur-utama) &middot; [Tangkapan Layar](#tangkapan-layar) &middot; [Instalasi](#instalasi--menjalankan-lokal) &middot; [Melatih Model](#melatih-model-dengan-dataset-sendiri) &middot; [Struktur Proyek](#struktur-proyek)
 
----
+</div>
 
-## 2. Struktur Proyek
+<br>
+
+<div align="center">
+  <img src="docs/screenshots/dashboard.png" alt="Dashboard FreshScan" width="850">
+</div>
+
+<br>
+
+## Tentang Proyek
+
+Penyortiran buah dan sayur berdasarkan kesegaran di rantai pasok pangan masih sering dilakukan manual, lambat, dan rawan penilaian berbeda antar orang. FreshScan dibangun untuk membantu mengotomasi proses tersebut menggunakan pendekatan **transfer learning** dengan arsitektur **Xception** yang sudah dilatih pada jutaan gambar ImageNet, kemudian dilatih ulang secara khusus dalam dua tahap, feature extraction dan fine tuning, untuk mengenali kombinasi jenis item dan kondisi kesegarannya sekaligus dalam satu model.
+
+Jumlah dan nama kelas yang dikenali **otomatis mengikuti struktur folder dataset** yang dipakai untuk training, tidak pernah di-hardcode di dalam kode. Aplikasi ini juga transparan soal performa modelnya sendiri, lengkap dengan grafik training, confusion matrix, dan statistik dataset yang bisa dilihat langsung di halaman web.
+
+## Fitur Utama
+
+- **Klasifikasi real time**, unggah foto lewat drag and drop, hasil keluar dalam hitungan detik
+- **Klasifikasi multi kelas**, mengenali jenis item dan kondisi kesegarannya sekaligus, bukan sekadar segar atau busuk generik
+- **Top 5 probabilitas tertinggi**, ditampilkan dengan grafik batang beserta selisih keyakinan antar kelas
+- **Dashboard informatif**, statistik dataset, alur cara kerja sistem, dan daftar kelas yang dikenali
+- **Evaluasi model transparan**, grafik akurasi dan loss dua tahap training, confusion matrix, serta arsitektur model, semuanya bisa dilihat publik
+- **Halaman dataset**, sumber data, rincian jumlah gambar, dan grafik komposisi per kelas
+- **Mode aman tanpa model**, aplikasi tetap bisa dibuka walau model belum dilatih, halaman terkait menampilkan pesan informatif alih-alih error
+
+## Tangkapan Layar
+
+<table>
+<tr>
+<td width="50%">
+
+**Dashboard**
+<img src="docs/screenshots/dashboard.png" alt="Dashboard">
+
+</td>
+<td width="50%">
+
+**Klasifikasi**
+<img src="docs/screenshots/klasifikasi.png" alt="Halaman Klasifikasi">
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Hasil Klasifikasi**
+<img src="docs/screenshots/hasil.png" alt="Hasil Klasifikasi">
+
+</td>
+<td width="50%">
+
+**Model dan Akurasi**
+<img src="docs/screenshots/model.png" alt="Halaman Model dan Akurasi">
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Dataset**
+<img src="docs/screenshots/dataset.png" alt="Halaman Dataset">
+
+</td>
+<td width="50%">
+
+**Tentang**
+<img src="docs/screenshots/tentang.png" alt="Halaman Tentang">
+
+</td>
+</tr>
+</table>
+
+## Kelas yang Dikenali
+
+Dataset menyediakan label per jenis item, bukan cuma fresh atau rotten generik, sehingga model dilatih untuk mengenali kelas gabungan jenis dan kondisi secara langsung, contoh `FreshApple`, `FreshBanana`, `RottenApple`, `RottenBanana`, dan seterusnya. Jumlah kelas mengikuti berapa banyak sub folder yang tersedia di dataset yang dipakai, bisa 6 kelas untuk dataset kecil atau lebih dari 20 kelas untuk dataset yang lebih lengkap.
+
+Label jenis item dan kondisi diturunkan otomatis dari nama folder kelas melalui fungsi `parse_class_name` di `app.py`, mendukung penulisan besar kecil huruf yang bervariasi.
+
+## Teknologi yang Digunakan
+
+| Komponen | Teknologi |
+|---|---|
+| Backend | Flask 3.0 |
+| Machine Learning | TensorFlow / Keras, Xception (transfer learning) |
+| Pemrosesan Gambar | Pillow, NumPy |
+| Frontend | Bootstrap 5, Bootstrap Icons, Chart.js |
+| Evaluasi Model | scikit-learn, Matplotlib |
+| Server Produksi | Gunicorn |
+
+## Struktur Proyek
 
 ```
-fruit-freshness-app/
-├── app.py                       # Backend Flask (routing, load model, klasifikasi)
-├── train_model.py               # Script training transfer learning Xception (multi-kelas)
+freshscan-app/
+├── app.py                        # Aplikasi Flask (routing, load model, klasifikasi)
+├── train_model.py                # Script training transfer learning Xception
+├── generate_confusion_matrix.py  # Script pembuat confusion matrix dari model terlatih
 ├── requirements.txt
 ├── dataset_tools/
-│   └── prepare_dataset.py       # OPSIONAL/legacy (lihat catatan di dalam file)
-├── model/                       # (dibuat otomatis) model .keras + label mapping + metrik
-├── static/reports/              # (dibuat otomatis) grafik akurasi/loss dan confusion matrix (PNG)
-├── templates/                   # HTML (Jinja2 + Bootstrap 5)
-│   ├── base.html
-│   ├── index.html               # Dashboard
-│   ├── predict.html             # Upload & hasil
-│   ├── model_info.html          # Detail model & evaluasi
-│   ├── dataset.html             # Info dataset
-│   └── about.html               # Metodologi
-└── static/
-    ├── css/style.css            # Styling kustom
-    ├── js/script.js             # Interaksi drag & drop, preview gambar
-    ├── js/charts.js             # Rendering semua grafik Chart.js
-    └── uploads/                 # Gambar yang diunggah pengguna
+│   └── prepare_dataset.py        # Alat bantu penyiapan dataset
+├── model/                        # Output training, model terlatih, mapping kelas, metrik
+├── static/
+│   ├── css/style.css             # Styling kustom
+│   ├── js/script.js              # Interaksi drag and drop dan preview gambar
+│   ├── js/charts.js              # Rendering seluruh grafik Chart.js
+│   ├── reports/                  # Grafik akurasi/loss dan confusion matrix (PNG)
+│   └── uploads/                  # Gambar yang diunggah pengguna
+├── templates/                    # dashboard, klasifikasi, hasil, model, dataset, tentang
+└── docs/screenshots/             # Tangkapan layar untuk README ini
 ```
 
-Prinsip **"1 file 1 bahasa pemrograman"** diterapkan ketat: seluruh logika Python
-(Flask + model AI) ada di file `.py`, struktur halaman di file `.html`, styling di
-`.css`, dan seluruh interaksi/visualisasi sisi klien di file `.js`, tidak dicampur
-dalam satu file.
-
----
-
-## 3. Kenapa Multi-Kelas (Bukan Cuma Fresh/Rotten Biner)?
-
-Dataset yang dipakai sudah menyediakan label per jenis item (bukan cuma fresh/rotten
-generik), jadi model dilatih untuk mengenali kelas gabungan jenis x kondisi langsung,
-contoh:
-
-`FreshApple`, `FreshBanana`, `FreshCarrot`, `RottenApple`, `RottenBanana`, `RottenCarrot`, dst.
-
-Jumlah kelas otomatis mengikuti berapa banyak sub-folder yang ada di dataset kamu,
-bisa 6 kelas (dataset 3 buah) atau 20 kelas (dataset 10 buah & sayur), tanpa perlu ubah
-kode. Ini membuat aplikasi bisa menampilkan info lebih kaya, misalnya *"Terdeteksi:
-Wortel, kondisi Busuk (96%)"*, bukan sekadar *"Rotten (96%)"*. Label fresh/rotten +
-jenis item diturunkan otomatis dari nama kelas di `app.py` (lihat fungsi
-`parse_class_name`), dan sudah case-insensitive (mendukung `FreshApple` maupun
-`freshapples`).
-
-> **Catatan istilah:** tugas ini bertipe **klasifikasi** (mengelompokkan gambar ke
-> kategori tertentu). Namun tindakan model saat memproses satu gambar tetap disebut
-> **"memprediksi"** (`model.predict()`), ini istilah standar di ML/TensorFlow,
-> bukan kesalahan penulisan. Karena itu di kode kamu akan menemukan fungsi seperti
-> `predict_freshness()`, sementara di teks pengguna kami konsisten memakai
-> "klasifikasi" untuk merujuk ke tugas/metodenya.
-
----
-
-## 4. Instalasi
+## Instalasi & Menjalankan Lokal
 
 ```bash
+# Buat virtual environment
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 
+# Install dependensi
 pip install -r requirements.txt
+
+# Jalankan aplikasi
+python app.py
 ```
 
----
+Buka **http://127.0.0.1:5000** di browser. Jika model belum dilatih, aplikasi tetap bisa dibuka, halaman Model dan Dataset akan menampilkan pesan "belum ada data" alih-alih grafik.
 
-## 5. Menyiapkan Dataset & Melatih Model
+## Melatih Model dengan Dataset Sendiri
 
-1. Download dataset dari Kaggle:
-   [muhriddinmuxiddinov/fruits-and-vegetables-dataset](https://www.kaggle.com/datasets/muhriddinmuxiddinov/fruits-and-vegetables-dataset)
-2. Extract ke folder `dataset/` di root proyek. **Dua jenis struktur folder didukung
-   secara otomatis:**
+1. Unduh dataset dari Kaggle: [Fruits and Vegetables Dataset](https://www.kaggle.com/datasets/muhriddinmuxiddinov/fruits-and-vegetables-dataset).
+2. Ekstrak ke folder `dataset/` di root proyek. Dua struktur folder didukung otomatis:
 
-   **A) Sudah terpisah train/test:**
+   **Sudah terpisah train/test:**
    ```
    dataset/
    ├── train/
    │   ├── FreshApple/
    │   ├── RottenApple/
-   │   └── ... (kelas lain)
+   │   └── ...
    └── test/
-       └── (folder yang sama)
+       └── (struktur yang sama)
    ```
 
-   **B) Flat, semua kelas langsung di bawah `dataset/` (tanpa folder train/test):**
+   **Flat, semua kelas langsung di bawah `dataset/`:**
    ```
    dataset/
    ├── FreshApple/
    ├── RottenApple/
-   ├── FreshCarrot/
-   ├── RottenCarrot/
-   └── ... (kelas lain)
+   └── ...
    ```
-   Untuk struktur ini, `train_model.py` **otomatis membuat split 90:10** (train:test)
-   ke folder `dataset_split/` saat pertama kali dijalankan (dataset asli tidak diubah).
+   Untuk struktur flat, `train_model.py` otomatis membuat split 90:10 ke folder `dataset_split/` saat pertama kali dijalankan, dataset asli tidak diubah.
 
-   Tidak perlu jalankan script konversi manual apapun, `train_model.py` mendeteksi
-   struktur mana yang kamu punya secara otomatis.
 3. Jalankan training:
    ```bash
    python train_model.py
    ```
 
-> ⚠️ **PENTING sebelum training ulang:** hapus dulu isi folder `model/` (file
-> `.h5` maupun `.keras` yang lama). Kalau ada 2 file model berbeda tertinggal di
-> sana (misal sisa training lama + training baru), `app.py` bisa salah memuat
-> file yang **bukan hasil training terbarumu**, inilah penyebab paling umum
-> error `quantization_config` / hasil klasifikasi yang aneh meskipun training
-> barusan sukses dengan akurasi bagus.
+Sebelum melatih ulang, kosongkan dulu folder `model/` dari file `.h5` atau `.keras` lama, supaya aplikasi tidak keliru memuat model hasil training sebelumnya.
 
-### Training Lebih Cepat di Laptop CPU (tanpa GPU)
+Untuk training lebih ringan di laptop tanpa GPU, atur `FAST_TRAINING = True` di bagian atas `train_model.py`. Mode ini memakai resolusi gambar 224x224, jumlah epoch lebih sedikit, dan fine tuning pada lapisan yang lebih sedikit, dengan trade off akurasi yang sedikit lebih rendah dibanding mode penuh (299x299).
 
-Kalau training 8 jam+ terasa terlalu lama, buka `train_model.py` dan cek variabel
-`FAST_TRAINING` di bagian atas file:
+Setelah training selesai, folder `model/` akan berisi model terlatih, mapping label, dan seluruh metrik yang dipakai halaman Model dan Dataset untuk menggambar grafik. Grafik PNG untuk lampiran laporan juga otomatis tersimpan di `static/reports/`.
 
-```python
-FAST_TRAINING = True   # default: mode cepat aktif
-```
+Untuk training dengan GPU gratis, tersedia notebook `FreshScan_Training_Colab.ipynb` yang tinggal diunggah ke [Google Colab](https://colab.research.google.com).
 
-Saat `True`, script otomatis memakai:
-- Resolusi gambar 224&times;224 (bukan 299&times;299) &rarr; komputasi ~44% lebih ringan
-- Epoch lebih sedikit (8 + 5, dibanding 12 + 8). `EarlyStopping` tetap aktif jadi
-  training otomatis berhenti lebih awal kalau sudah konvergen
-- Fine-tuning hanya 15 layer terakhir (bukan 30) &rarr; backpropagation tahap 2 lebih ringan
-- Data loading pakai beberapa thread (`DATA_LOADING_WORKERS = 4`) supaya CPU tidak nganggur
-  menunggu gambar berikutnya selesai dibaca/diolah
+## Arsitektur Model
 
-**Trade-off:** akurasi biasanya turun sedikit (1-3%) dibanding mode penuh, tapi waktu
-training bisa berkurang signifikan. Set `FAST_TRAINING = False` kalau mau kualitas
-maksimal dan tidak keberatan menunggu lebih lama.
+Xception (pretrained ImageNet, dibekukan) &rarr; Global Average Pooling &rarr; Dense 256 (ReLU) &rarr; Dropout 0.5 &rarr; Dense 64 (ReLU) &rarr; Dense sejumlah kelas (Softmax).
 
-> Resolusi gambar (`IMG_SIZE`) otomatis disimpan ke `training_metrics.json` dan dibaca
-> ulang oleh `app.py` saat inferensi, jadi kamu tidak perlu mengubah apapun di `app.py`
->, apapun resolusi yang dipakai saat training akan otomatis dipakai juga saat prediksi.
+Strategi training dilakukan dalam dua tahap, feature extraction dengan base model dibekukan, dilanjutkan fine tuning dengan sebagian lapisan terakhir dibuka. Evaluasi akhir memakai akurasi, precision, recall, F1-score, dan confusion matrix pada data uji yang terpisah dari data training.
 
-Setelah selesai, akan terbentuk di folder `model/`:
-- `xception_fruit_freshness.keras`, model terlatih
-- `class_indices.json`, mapping label ke index
-- `training_metrics.json`, **semua metrik** (riwayat akurasi/loss, confusion matrix,
-  classification report, komposisi dataset) yang otomatis dipakai halaman `/model`
-  dan `/dataset` untuk menggambar grafik
+## Deployment
 
-Serta di folder `static/reports/`: grafik PNG (akurasi/loss tiap tahap + confusion matrix)
-untuk dilampirkan ke laporan tugas.
-
-**Ingin training lebih cepat dengan GPU gratis?** Gunakan notebook Google Colab yang
-sudah disediakan terpisah (`FreshScan_Training_Colab.ipynb`), tinggal upload ke
-[colab.research.google.com](https://colab.research.google.com), jalankan semua cell,
-lalu download 3 file (`xception_fruit_freshness.keras`, `class_indices.json`,
-`training_metrics.json`) ke folder `model/` lokal.
-
----
-
-## 6. Menjalankan Aplikasi Web
+Aplikasi ini kompatibel dengan platform hosting yang mendukung aplikasi Flask berbasis Python, seperti Render atau Railway, dengan start command:
 
 ```bash
-python app.py
+gunicorn app:app
 ```
 
-Buka `http://127.0.0.1:5000`. Jika model belum dilatih, aplikasi tetap bisa dibuka
-tapi halaman `/model` dan `/dataset` akan menampilkan pesan "belum ada data" alih-alih
-grafik.
+Pastikan folder `model/` beserta file `.keras` dan `.json` di dalamnya ikut ter-deploy, gunakan Git LFS bila ukurannya besar.
 
----
+## Catatan Kompatibilitas Versi
 
-## 7. Fitur Aplikasi
-
-- ✅ Dashboard dengan statistik ringkas (total gambar, jumlah kelas, akurasi model)
-- ✅ Upload gambar dengan **drag & drop** + preview
-- ✅ Klasifikasi multi-kelas: jenis buah + kondisi kesegaran + tingkat keyakinan
-- ✅ Grafik bar probabilitas untuk semua 6 kelas di setiap hasil klasifikasi
-- ✅ Halaman **Model & Akurasi**: diagram arsitektur, grafik training 2 tahap,
-  confusion matrix (heatmap tabel), classification report
-- ✅ Halaman **Dataset**: grafik komposisi data per kelas, tabel rincian jumlah gambar
-- ✅ Halaman **Tentang**: latar belakang masalah, metodologi, batasan, pengembangan
-- ✅ UI Bootstrap 5 dengan tema visual khas (hijau segar vs rust busuk)
-
----
-
-## 8. Deployment ke Hosting Gratis
-
-- **Render.com** (free web service tier)
-- **Railway.app**
-- **Hugging Face Spaces** (Docker template)
-
-Langkah umum:
-1. Push project (kecuali `dataset/`, `data/`, lihat `.gitignore`) ke GitHub
-2. Hubungkan repository ke platform hosting
-3. Start command: `gunicorn app:app`
-4. Pastikan folder `model/` (termasuk file `.keras` & `.json`) ikut ter-deploy
-   (pakai Git LFS jika ukurannya besar)
-
----
-
-## 9. Troubleshooting Versi TensorFlow/Keras
-
-Jika muncul error seperti `Unrecognized keyword arguments` atau
-`quantization_config` saat `load_model()`:
-- Ini artinya versi TensorFlow/Keras yang dipakai untuk **training** (misal di
-  Colab) berbeda dengan versi yang dipakai untuk **menjalankan aplikasi** (lokal).
-- Solusi: pastikan `requirements.txt` (`tensorflow==2.20.0`) dipakai konsisten di
-  kedua tempat. Jika training ulang di Colab, tambahkan cell
-  `!pip install -q tensorflow==2.20.0` di awal notebook sebelum training, lalu
-  **restart runtime** sebelum lanjut.
-
----
-
-## 10. Catatan untuk Laporan/Dokumentasi Tugas
-
-- **Studi kasus**: Klasifikasi kesegaran buah multi-kelas (jenis buah x kondisi)
-  menggunakan Transfer Learning Xception.
-- **Dataset**: Fruits and Vegetables Dataset (Kaggle, oleh muhriddinmuxiddinov).
-- **Arsitektur**: Xception (pretrained ImageNet) + GAP + Dense(256) + Dropout(0.5)
-  + Dense(64) + Dense(6, softmax).
-- **Strategi training**: Feature Extraction lalu Fine-Tuning 30 layer terakhir.
-- **Evaluasi**: Akurasi, precision, recall, F1-score, dan confusion matrix pada
-  data test terpisah, semuanya bisa dilihat langsung di halaman `/model` setelah
-  training, atau di folder `static/reports/` sebagai gambar untuk lampiran laporan.
+Jika muncul error seperti `Unrecognized keyword arguments` atau `quantization_config` saat model dimuat, artinya versi TensorFlow/Keras yang dipakai saat training berbeda dengan versi yang dipakai saat menjalankan aplikasi. Pastikan `requirements.txt` (`tensorflow==2.20.0`) dipakai konsisten di kedua tempat.
