@@ -16,10 +16,16 @@
             <div class="col-md-6">
                 <div class="info-card h-100">
                     <h5><i class="bi bi-box-seam me-2"></i>Sumber Dataset</h5>
-                    <p class="text-muted mb-2">
+                    <p class="text-muted mb-3">
                         Fruits and Vegetables Dataset dari Kaggle, berisi gambar close-up berbagai jenis
                         buah dan sayur yang masing-masing dilabeli kondisi segar atau busuk.
                     </p>
+                    <ul class="process-list mb-3">
+                        <li><strong>Format berkas</strong>, JPG, PNG, dan WEBP dengan resolusi asli yang bervariasi</li>
+                        <li><strong>Preprocessing</strong>, setiap gambar diresize otomatis ke 299&times;299 piksel sebelum masuk ke Xception</li>
+                        <li><strong>Struktur label</strong>, satu folder per kelas gabungan jenis item dan kondisi, dibaca otomatis oleh <code>train_model.py</code></li>
+                        <li><strong>Lisensi</strong>, mengikuti ketentuan yang tercantum pada halaman Kaggle sumbernya</li>
+                    </ul>
                     <a href="https://www.kaggle.com/datasets/muhriddinmuxiddinov/fruits-and-vegetables-dataset"
                        target="_blank" rel="noopener" class="small">
                         Lihat sumber dataset di Kaggle <i class="bi bi-box-arrow-up-right"></i>

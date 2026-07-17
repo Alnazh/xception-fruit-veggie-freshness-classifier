@@ -8,59 +8,86 @@
         <div class="row justify-content-center">
             <div class="col-lg-9">
 
-                <span class="eyebrow"><i class="bi bi-info-circle me-1"></i>Tentang Proyek</span>
-                <h1 class="section-title mb-4">Latar Belakang &amp; Metodologi</h1>
+                <span class="eyebrow"><i class="bi bi-info-circle me-1"></i>Tentang Aplikasi</span>
+                <h1 class="section-title mb-4">Tentang FreshScan</h1>
 
                 <div class="info-card mb-4">
-                    <h4><i class="bi bi-question-circle me-2"></i>Latar Belakang Masalah</h4>
+                    <h4><i class="bi bi-app-indicator me-2"></i>Apa itu FreshScan</h4>
                     <p class="text-muted mb-0">
-                        Penyortiran kesegaran buah secara manual di rantai pasok pangan, mulai dari
-                        petani, distributor, hingga pengecer, masih rawan human error dan tidak
-                        konsisten antar penilai. Kesalahan sortir bisa menyebabkan buah busuk lolos ke
-                        konsumen, atau sebaliknya, buah yang masih layak justru dibuang (food waste).
-                        FreshScan mencoba menunjukkan bagaimana computer vision bisa membantu mengotomasi
-                        sebagian proses ini.
+                        FreshScan adalah aplikasi web untuk mengenali jenis buah atau sayur sekaligus
+                        menilai kondisi kesegarannya, segar atau busuk, hanya dari satu foto. Cukup unggah
+                        gambar lewat drag and drop, sistem akan menganalisisnya dalam hitungan detik dan
+                        menampilkan hasil klasifikasi lengkap dengan tingkat keyakinan model.
                     </p>
                 </div>
 
                 <div class="info-card mb-4">
-                    <h4><i class="bi bi-diagram-2 me-2"></i>Alur Metodologi</h4>
+                    <h4><i class="bi bi-diagram-2 me-2"></i>Cara Kerja Aplikasi</h4>
                     <p class="text-muted small mb-4">
-                        Berikut tahapan nyata yang dilalui dari data mentah sampai aplikasi ini bisa dipakai:
+                        Empat langkah yang terjadi di balik layar setiap kali foto diunggah:
                     </p>
                     <ol class="process-list">
                         <li>
-                            <strong>Pengumpulan Dataset</strong>, mengunduh dataset publik gambar buah dan
-                            sayur segar maupun busuk dari Kaggle.
+                            <strong>Unggah Gambar</strong>, pengguna memilih atau menyeret foto buah/sayur
+                            lewat halaman Klasifikasi.
                         </li>
                         <li>
-                            <strong>Preprocessing</strong>, setiap gambar di-resize ke 299&times;299 piksel
-                            dan dinormalisasi menggunakan fungsi <code>preprocess_input</code> khusus
-                            Xception, ditambah augmentasi data (rotasi, zoom, flip) agar model lebih tahan
-                            terhadap variasi gambar dunia nyata.
+                            <strong>Preprocessing</strong>, gambar diresize ke 299&times;299 piksel dan
+                            dinormalisasi menggunakan fungsi <code>preprocess_input</code> khusus Xception.
                         </li>
                         <li>
-                            <strong>Transfer Learning</strong>, memanfaatkan Xception yang sudah dilatih
-                            pada ImageNet, lalu melatih ulang classifier head dalam 2 tahap: feature
-                            extraction (base dibekukan) dan fine tuning (sebagian layer terakhir dibuka).
+                            <strong>Inferensi Model</strong>, model Xception hasil transfer learning
+                            menghitung probabilitas untuk setiap kelas yang dikenali.
                         </li>
                         <li>
-                            <strong>Evaluasi</strong>, mengukur performa model pada data uji yang belum
-                            pernah dilihat model, memakai metrik akurasi, precision, recall, F1-score, dan
-                            confusion matrix (lihat halaman <a href="{{ url_for('model_info') }}">Model &amp; Akurasi</a>).
-                        </li>
-                        <li>
-                            <strong>Penyajian ke Pengguna</strong>, model yang sudah terlatih disematkan ke
-                            aplikasi web Flask ini, sehingga siapa pun bisa mengunggah foto buah dan
-                            langsung melihat hasil klasifikasinya.
+                            <strong>Hasil Ditampilkan</strong>, jenis item, kondisi kesegaran, tingkat
+                            keyakinan, dan grafik top 5 probabilitas ditampilkan lengkap ke pengguna.
                         </li>
                     </ol>
                 </div>
 
-                <div class="row g-4 mb-4">
+                <div class="info-card mb-4">
+                    <h4><i class="bi bi-stack me-2"></i>Teknologi yang Digunakan</h4>
+                    <div class="glossary-grid">
+                        <div class="glossary-item">
+                            <div class="glossary-term">Flask</div>
+                            <div class="glossary-desc">Backend web server, mengatur routing, upload gambar, dan pemanggilan model.</div>
+                        </div>
+                        <div class="glossary-item">
+                            <div class="glossary-term">TensorFlow / Keras</div>
+                            <div class="glossary-desc">Framework machine learning untuk membangun dan menjalankan model.</div>
+                        </div>
+                        <div class="glossary-item">
+                            <div class="glossary-term">Xception</div>
+                            <div class="glossary-desc">Arsitektur convolutional neural network yang dipakai sebagai basis transfer learning.</div>
+                        </div>
+                        <div class="glossary-item">
+                            <div class="glossary-term">Pillow &amp; NumPy</div>
+                            <div class="glossary-desc">Membaca, mengubah ukuran, dan menormalisasi gambar sebelum masuk ke model.</div>
+                        </div>
+                        <div class="glossary-item">
+                            <div class="glossary-term">Bootstrap 5</div>
+                            <div class="glossary-desc">Kerangka tampilan untuk tata letak, komponen, dan navigasi antar halaman.</div>
+                        </div>
+                        <div class="glossary-item">
+                            <div class="glossary-term">Chart.js</div>
+                            <div class="glossary-desc">Menggambar seluruh grafik interaktif, mulai dari probabilitas hasil hingga kurva training.</div>
+                        </div>
+                        <div class="glossary-item">
+                            <div class="glossary-term">scikit-learn</div>
+                            <div class="glossary-desc">Menghitung metrik evaluasi model seperti precision, recall, F1-score, dan confusion matrix.</div>
+                        </div>
+                        <div class="glossary-item">
+                            <div class="glossary-term">Gunicorn</div>
+                            <div class="glossary-desc">Menjalankan aplikasi Flask di server produksi saat proses deployment.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
                     <div class="col-md-6">
                         <div class="info-card h-100">
-                            <h5><i class="bi bi-exclamation-triangle me-2"></i>Batasan Model</h5>
+                            <h5><i class="bi bi-exclamation-triangle me-2"></i>Batasan Aplikasi</h5>
                             <ul class="text-muted small mb-0 ps-3">
                                 <li>Hanya mengenali jenis buah/sayur yang ada di dataset training (lihat halaman <a href="{{ url_for('dataset_info') }}">Dataset</a>).</li>
                                 <li>Akurasi bergantung pada kualitas foto (pencahayaan, fokus, sudut).</li>
@@ -78,15 +105,6 @@
                             </ul>
                         </div>
                     </div>
-                </div>
-
-                <div class="info-card">
-                    <h4><i class="bi bi-mortarboard me-2"></i>Konteks Akademik</h4>
-                    <p class="text-muted mb-0">
-                        Proyek ini dibuat untuk memenuhi Tugas 12 mata kuliah Artificial Intelligence:
-                        <em>"Penerapan Transfer Learning Xception pada Aplikasi Berbasis Web Menggunakan
-                        Flask"</em>. Dibangun dengan Flask, TensorFlow/Keras, Bootstrap 5, dan Chart.js.
-                    </p>
                 </div>
 
             </div>
