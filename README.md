@@ -128,6 +128,10 @@ freshscan-app/
 ## Instalasi & Menjalankan Lokal
 
 ```bash
+# Clone Repository
+git clone https://github.com/Alnazh/xception-fruit-veggie-freshness-classifier
+cd xception-fruit-veggie-freshness-classifier 
+
 # Buat virtual environment
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
