@@ -78,7 +78,7 @@ Jumlah dan nama kelas yang dikenali **otomatis mengikuti struktur folder dataset
 <img src="static/img/tentang.png" alt="Halaman Tentang">
 
 </td>
-<td width="50%">
+<td width="100%">
 </tr>
 </table>
 
