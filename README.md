@@ -40,7 +40,7 @@ Jumlah dan nama kelas yang dikenali **otomatis mengikuti struktur folder dataset
 - **Halaman dataset**, sumber data, rincian jumlah gambar, dan grafik komposisi per kelas
 - **Mode aman tanpa model**, aplikasi tetap bisa dibuka walau model belum dilatih, halaman terkait menampilkan pesan informatif alih-alih error
 
-## Tangkapan Layar
+## Tampilan Aplikasi
 
 <table>
 <tr>
