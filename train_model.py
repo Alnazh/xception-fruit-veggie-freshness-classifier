@@ -30,9 +30,9 @@ from sklearn.metrics import confusion_matrix, classification_report
 FAST_TRAINING = True
 
 if FAST_TRAINING:
-    IMG_SIZE = (224, 224)
-    EPOCHS_FEATURE_EXTRACTION = 40
-    EPOCHS_FINE_TUNING = 4
+    IMG_SIZE = (160, 160)
+    EPOCHS_FEATURE_EXTRACTION = 15
+    EPOCHS_FINE_TUNING = 3
     FINE_TUNE_LAYERS = 30
 else:
     IMG_SIZE = (299, 299)
@@ -40,7 +40,7 @@ else:
     EPOCHS_FINE_TUNING = 8
     FINE_TUNE_LAYERS = 30
 
-BATCH_SIZE = 32
+BATCH_SIZE = 64
 VALIDATION_SPLIT = 0.2
 TEST_SPLIT_RATIO = 0.1
 RANDOM_SEED = 42
@@ -56,6 +56,12 @@ REPORT_DIR = os.path.join("static", "reports")
 MODEL_PATH = os.path.join(MODEL_DIR, "xception_fruit_freshness.keras")
 CLASS_INDEX_PATH = os.path.join(MODEL_DIR, "class_indices.json")
 METRICS_PATH = os.path.join(MODEL_DIR, "training_metrics.json")
+
+# Versi ringkas model yang AMAN di-commit ke Git (bobot float16 terkompresi, jauh di bawah
+# limit 100MB GitHub). File .keras/.h5 di atas tetap dibuat untuk pemakaian lokal tapi
+# sengaja di-gitignore karena ukurannya besar. img_size & num_classes untuk merekonstruksi
+# arsitektur diambil dari class_indices.json + training_metrics.json yang sudah ada.
+COMPACT_WEIGHTS_PATH = os.path.join(MODEL_DIR, "xception_fruit_freshness_fp16.npz")
 
 os.makedirs(MODEL_DIR, exist_ok=True)
 os.makedirs(REPORT_DIR, exist_ok=True)
@@ -162,9 +168,11 @@ def build_data_generators(train_dir, test_dir):
     return train_generator, validation_generator, test_generator
 
 
-def build_model(num_classes):
+def build_model(num_classes, img_size=None):
     # Membangun model Xception dengan classifier head baru untuk num_classes kelas
-    base_model = Xception(weights="imagenet", include_top=False, input_shape=(*IMG_SIZE, 3))
+    # img_size bisa dioverride (dipakai app.py saat merekonstruksi arsitektur dari bobot fp16)
+    img_size = img_size or IMG_SIZE
+    base_model = Xception(weights="imagenet", include_top=False, input_shape=(*img_size, 3))
     base_model.trainable = False
 
     x = base_model.output
@@ -178,6 +186,18 @@ def build_model(num_classes):
     model.compile(optimizer=Adam(learning_rate=1e-4), loss="categorical_crossentropy", metrics=["accuracy"])
 
     return model, base_model
+
+
+def save_compact_weights(model, weights_path):
+    # Menyimpan bobot model dalam presisi float16 + terkompresi (biasanya sekitar separuh
+    # ukuran file .keras aslinya), supaya muat di-commit ke Git tanpa kena limit GitHub.
+    # Arsitektur direkonstruksi ulang oleh app.py memakai build_model() + class_indices.json
+    # + training_metrics.json (img_size), lalu bobot fp16 ini dipasang lewat set_weights().
+    weights_fp16 = [w.astype(np.float16) for w in model.get_weights()]
+    np.savez_compressed(weights_path, *weights_fp16)
+
+    size_mb = os.path.getsize(weights_path) / (1024 * 1024)
+    print(f"Bobot ringkas (float16) tersimpan di {weights_path} ({size_mb:.1f} MB)")
 
 
 def plot_history(history, filename, title_suffix):
@@ -235,7 +255,7 @@ def main():
 
     callbacks = [
         ModelCheckpoint(MODEL_PATH, monitor="val_accuracy", save_best_only=True, verbose=1),
-        EarlyStopping(monitor="val_loss", patience=4, restore_best_weights=True),
+        EarlyStopping(monitor="val_loss", patience=3, restore_best_weights=True),
         ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=2, min_lr=1e-7),
     ]
 
@@ -243,7 +263,6 @@ def main():
     print("Tahap 1: feature extraction")
     history_stage1 = model.fit(
         train_gen, validation_data=val_gen, epochs=EPOCHS_FEATURE_EXTRACTION, callbacks=callbacks,
-        workers=DATA_LOADING_WORKERS, use_multiprocessing=USE_MULTIPROCESSING, max_queue_size=20,
     )
     plot_history(history_stage1, "training_stage1_feature_extraction.png", "Tahap 1")
 
@@ -257,7 +276,6 @@ def main():
 
     history_stage2 = model.fit(
         train_gen, validation_data=val_gen, epochs=EPOCHS_FINE_TUNING, callbacks=callbacks,
-        workers=DATA_LOADING_WORKERS, use_multiprocessing=USE_MULTIPROCESSING, max_queue_size=20,
     )
     plot_history(history_stage2, "training_stage2_fine_tuning.png", "Tahap 2 Fine Tuning")
 
@@ -297,6 +315,8 @@ def main():
 
     model.save(MODEL_PATH)
     print(f"Model tersimpan di {MODEL_PATH}")
+
+    save_compact_weights(model, COMPACT_WEIGHTS_PATH)
 
     metrics = {
         "trained_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),

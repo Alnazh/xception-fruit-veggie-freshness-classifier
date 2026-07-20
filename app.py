@@ -24,6 +24,9 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 MODEL_PATH = os.path.join(BASE_DIR, "model", "xception_fruit_freshness.keras")
 CLASS_INDEX_PATH = os.path.join(BASE_DIR, "model", "class_indices.json")
 METRICS_PATH = os.path.join(BASE_DIR, "model", "training_metrics.json")
+# Fallback: bobot float16 terkompresi (kecil, aman di-commit ke Git). Dipakai kalau file
+# .keras penuh di atas tidak ada, misalnya di server deploy seperti Railway.
+COMPACT_WEIGHTS_PATH = os.path.join(BASE_DIR, "model", "xception_fruit_freshness_fp16.npz")
 IMG_SIZE = (299, 299)
 
 FRUIT_LABELS_ID = {
@@ -78,16 +81,46 @@ def parse_class_name(class_name):
 
 
 def load_trained_model():
-    # Memuat model .keras dan mapping label dari folder model/
+    # Memuat model dan mapping label dari folder model/.
+    # Prioritas 1: file .keras penuh (dipakai untuk development lokal).
+    # Prioritas 2: bobot float16 terkompresi (.npz) + rekonstruksi arsitektur, dipakai di
+    #              server deploy seperti Railway karena file .keras penuh tidak di-commit ke Git.
     global model, class_indices, index_to_label, class_names, model_status_message
 
-    if os.path.exists(MODEL_PATH) and os.path.exists(CLASS_INDEX_PATH):
+    if not os.path.exists(CLASS_INDEX_PATH):
+        model_status_message = "Model belum ditemukan di folder model. Jalankan train_model.py terlebih dahulu."
+        print(model_status_message)
+        return
+
+    with open(CLASS_INDEX_PATH, "r") as f:
+        class_indices = json.load(f)
+    index_to_label = {v: k for k, v in class_indices.items()}
+    class_names = sorted(class_indices, key=class_indices.get)
+    num_classes = len(class_names)
+
+    if os.path.exists(MODEL_PATH):
         model = tf.keras.models.load_model(MODEL_PATH)
-        with open(CLASS_INDEX_PATH, "r") as f:
-            class_indices = json.load(f)
-        index_to_label = {v: k for k, v in class_indices.items()}
-        class_names = sorted(class_indices, key=class_indices.get)
         model_status_message = "Model berhasil dimuat dan siap digunakan."
+        print(model_status_message)
+    elif os.path.exists(COMPACT_WEIGHTS_PATH):
+        # img_size dibaca dari training_metrics.json kalau ada, supaya arsitektur yang
+        # dibangun ulang persis sama dengan resolusi saat training. Kalau belum ada, pakai
+        # IMG_SIZE default modul ini (299, 299).
+        img_size = IMG_SIZE
+        if os.path.exists(METRICS_PATH):
+            with open(METRICS_PATH, "r") as f:
+                saved_metrics = json.load(f)
+            if "img_size" in saved_metrics:
+                img_size = tuple(saved_metrics["img_size"])
+
+        from train_model import build_model
+        model, _ = build_model(num_classes, img_size=img_size)
+
+        with np.load(COMPACT_WEIGHTS_PATH) as data:
+            weights_fp16 = [data[key] for key in sorted(data.files, key=lambda k: int(k.split("_")[1]))]
+        model.set_weights(weights_fp16)
+
+        model_status_message = "Model berhasil dimuat dari bobot ringkas (float16) dan siap digunakan."
         print(model_status_message)
     else:
         model_status_message = "Model belum ditemukan di folder model. Jalankan train_model.py terlebih dahulu."

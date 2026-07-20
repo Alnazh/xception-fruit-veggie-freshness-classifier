@@ -8,11 +8,16 @@ feature_cache/
 # Folder reports lama di root (sudah dipindah ke static/reports/)
 reports/
 
-# Model hasil training & metrik (opsional: bisa di-track pakai Git LFS jika ingin disertakan)
+# Model penuh hasil training: besar (100MB+), TIDAK di-commit ke Git karena kena limit
+# GitHub. Dipakai untuk development lokal saja, hasil dari `python train_model.py`.
 model/*.keras
 model/*.h5
-model/class_indices.json
-model/training_metrics.json
+
+# Bobot ringkas (float16, terkompresi) & metadata kecil TETAP di-commit supaya deploy
+# (misalnya ke Railway) tetap punya model tanpa perlu file besar di atas.
+!model/xception_fruit_freshness_fp16.npz
+!model/class_indices.json
+!model/training_metrics.json
 
 # Hasil upload pengguna & laporan training
 static/uploads/*
