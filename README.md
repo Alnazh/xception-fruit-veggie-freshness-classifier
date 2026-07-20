@@ -47,43 +47,38 @@ Jumlah dan nama kelas yang dikenali **otomatis mengikuti struktur folder dataset
 <td width="50%">
 
 **Dashboard**
-<img src="docs/screenshots/dashboard.png" alt="Dashboard">
+<img src="static/img/dashboard.png" alt="Dashboard">
 
 </td>
 <td width="50%">
 
 **Klasifikasi**
-<img src="docs/screenshots/klasifikasi.png" alt="Halaman Klasifikasi">
+<img src="static/img/klasifikasi.png" alt="Halaman Klasifikasi">
 
 </td>
 </tr>
 <tr>
-<td width="50%">
-
-**Hasil Klasifikasi**
-<img src="docs/screenshots/hasil.png" alt="Hasil Klasifikasi">
-
-</td>
 <td width="50%">
 
 **Model dan Akurasi**
-<img src="docs/screenshots/model.png" alt="Halaman Model dan Akurasi">
+<img src="static/img/model.png" alt="Halaman Model dan Akurasi">
+
+</td>
+<td width="50%">
+
+**Dataset**
+<img src="static/img/dataset.png" alt="Halaman Dataset">
 
 </td>
 </tr>
 <tr>
 <td width="50%">
 
-**Dataset**
-<img src="docs/screenshots/dataset.png" alt="Halaman Dataset">
+**Tentang**
+<img src="static/img/tentang.png" alt="Halaman Tentang">
 
 </td>
 <td width="50%">
-
-**Tentang**
-<img src="docs/screenshots/tentang.png" alt="Halaman Tentang">
-
-</td>
 </tr>
 </table>
 

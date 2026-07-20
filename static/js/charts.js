@@ -1,13 +1,13 @@
 // Rendering semua grafik memakai Chart.js, dipisah dari script.js interaksi UI
 
 const CHART_COLORS = {
-    fresh: "#10B981",
-    freshSoft: "rgba(16, 185, 129, 0.2)",
+    fresh: "#0D9488",
+    freshSoft: "rgba(13, 148, 136, 0.2)",
     rotten: "#E11D48",
     rottenSoft: "rgba(225, 29, 72, 0.2)",
-    neutral: "#F59E0B",
-    grid: "rgba(76, 29, 149, 0.07)",
-    text: "#6B6280",
+    neutral: "#D97706",
+    grid: "rgba(15, 23, 42, 0.06)",
+    text: "#64748B",
 };
 
 const BASE_CHART_OPTIONS = {
@@ -22,19 +22,14 @@ const BASE_CHART_OPTIONS = {
     },
 };
 
-// Bar chart horizontal top 5 probabilitas tertinggi, dipakai di halaman klasifikasi
+// Bar chart horizontal probabilitas semua kelas, dipakai di halaman klasifikasi
 window.renderProbabilityChart = function (canvasId, probData) {
     const canvas = document.getElementById(canvasId);
     if (!canvas || !probData) return;
 
-    const top5 = [...probData].sort((a, b) => b.probability - a.probability).slice(0, 5);
-    const labels = top5.map((item) => item.display);
-    const values = top5.map((item) => item.probability);
-    const colors = top5.map((item) => (item.condition === "fresh" ? CHART_COLORS.fresh : CHART_COLORS.rotten));
-
-    // tinggi tetap karena bar dibatasi maksimal 5 baris
-    const container = canvas.parentElement;
-    if (container) container.style.height = Math.max(220, labels.length * 44) + "px";
+    const labels = probData.map((item) => item.display);
+    const values = probData.map((item) => item.probability);
+    const colors = probData.map((item) => (item.condition === "fresh" ? CHART_COLORS.fresh : CHART_COLORS.rotten));
 
     new Chart(canvas.getContext("2d"), {
         type: "bar",
@@ -48,7 +43,7 @@ window.renderProbabilityChart = function (canvasId, probData) {
             },
             scales: {
                 x: { beginAtZero: true, max: 100, ticks: { color: CHART_COLORS.text, callback: (v) => v + "%" }, grid: { color: CHART_COLORS.grid } },
-                y: { ticks: { color: CHART_COLORS.text, autoSkip: false }, grid: { display: false } },
+                y: { ticks: { color: CHART_COLORS.text }, grid: { display: false } },
             },
         },
     });
