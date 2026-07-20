@@ -19,7 +19,7 @@ Unggah foto buah atau sayur, sistem akan mengenali jenisnya sekaligus menilai ko
 <br>
 
 <div align="center">
-  <img src="docs/screenshots/dashboard.png" alt="Dashboard FreshScan" width="850">
+  <img src="static/img/dashboard.png" alt="Dashboard FreshScan" width="850">
 </div>
 
 <br>
@@ -76,9 +76,6 @@ Jumlah dan nama kelas yang dikenali **otomatis mengikuti struktur folder dataset
 
 **Tentang**
 <img src="static/img/tentang.png" alt="Halaman Tentang">
-
-</td>
-<td width="100%">
 </tr>
 </table>
 
